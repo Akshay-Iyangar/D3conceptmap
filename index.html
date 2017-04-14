@@ -32,13 +32,14 @@
 	
 <script>
 
+//********** Please write a very good css this is adhoc ***************
+
+
 // ************** Generate the tree diagram	 *****************
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
 	width = 960 - margin.right - margin.left,
 	height = 500 - margin.top - margin.bottom;
 	
-var i = 0;
-
 var tree = d3.layout.tree()
 	.size([height, width]);
 
@@ -48,33 +49,52 @@ var diagonal = d3.svg.diagonal()
 var svg = d3.select("body").append("svg")
 	.attr("width", width + margin.right + margin.left)
 	.attr("height", height + margin.top + margin.bottom)
-  .append("g")
+  	.append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // load the external data
 //Loads the complete json
 //Object { name: "Top Level", parent: "null", children: Array[2] }
-d3.json("./sampleData.json", function(error, treeData) {
+d3.json("./sampleData1.json", function(error, treeData) {
   upstream = treeData[0]["upstream"];
   downstream = treeData[0]["downstream"];
   //console.log(upstream);
-  update(upstream,180);
-  update(downstream,-180);
+  update(upstream,180,"upstream");
+  update(downstream,-180,"downstream");
 });
 
-function update(source,depth_factor) {
+function update(source,depth_factor,side) {
 	//source will have the complete data
 	//without var you have the variable declared as global. So accessible.
 	//console.log(source);
 
   // Compute the new tree layout.
   //console.log(source);
-  var nodes = tree.nodes(source).reverse(),
-  //var node_right = tree.nodes(source.downstream).reverse(), //Not global
-	  links = tree.links(nodes); //global
+  //Will need an array. Let's do this .
+
+  //Just check if source is an array or not if not an array make it an array.
+
+  if(source.constructor != Array){
+  	var data = new Array(source); 	
+  }
+  else{
+  	var data = source;
+  }
+
+  var nodes ;
+  var links ;
+  var height_change=0;
+  var index;
+
+
+  data.forEach(function(data,i){
+  	nodes = tree.nodes(data).reverse();
+  	links = tree.links(nodes);
+  	height_change = height_change + 18;
+  	index = i;
 //console.log(tree.nodes(source));
-//console.log(nodes); //gets you all the nodes //MyCode: Array [ Array[2] ] Original Code: Array [ Object, Object, Object, Object, Object ]
-//console.log(links) //gets you all the links Array [ Object, Object, Object, Object ]
+//console.log(nodes[0]); //gets you all the nodes //MyCode: Array [ Array[2] ] Original Code: Array [ Object, Object, Object, Object, Object ]
+ //gets you all the links Array [ Object, Object, Object, Object ]
 
 
 
@@ -83,11 +103,12 @@ function update(source,depth_factor) {
 
   // Declare the nodes…
   //This is where the data is read 
-  var node = svg.selectAll("gnode") //what does this g.node do??? Need to explore
+  var node = svg.selectAll("svg") //what does this g.node do??? Need to explore
 	  .data(nodes, function(d) { //console.log(d.id);
 	  	return d.id || (d.id = i++); });
 
-//console.log(nodes[0]);
+	
+	//console.log(source.length);
 
 
 
@@ -100,21 +121,22 @@ function update(source,depth_factor) {
 		  return "translate(" + (d.y+(width/2)) + "," + d.x + ")"; }); //svg x,y co-ordinates
 
 //for varying shapes use path and keep retrofitting as per conveniance
-//This d.id === i-1 may come to bite you as the code exapnds. I guess
 
   nodeEnter.append("path")
   			.attr("class","node")
-  			.style("fill", function(d){ return d.id === i-1 ? "green":"steelblue";})
+  			.attr("transform", function(d) { 
+		  		return "translate(" + 0 + "," + (25*index) + ")"; })//svg x,y co-ordinates //need to see how this can be dynamic
+  			.style("fill", function(d){ return d.parent == "null" ? "green":"steelblue";})
       		.style("stroke", "white")
       		.style("stroke-width", "1.5px")
       		.on("mouseover", function(d) {
       			if(d.children){
       				d3.select(this).style("fill","red");
-      				
+  
       				d3.selectAll("path.link").style("stroke-width","5.5px"); // this should be stroke 
       				
       				var child = d3.selectAll("path.node");
-      				child.filter(function(x){return d.id != x.id}).style("fill","pink"); //Works absolutely fine
+      				child.filter(function(x){console.log(d.id);return d.id != x.id}).style("fill","pink"); //Works absolutely fine
 
       				//This is good logic may be needed but need recursive action not iterative . 
       				/*d.children.forEach(function(c,i){
@@ -124,8 +146,7 @@ function update(source,depth_factor) {
       					//console.log(c);
       					//console.log(i);
       					//d3.select(this).style("fill","black");
-      				})*/
-      				
+      				})*/		
       			}
       		})
       		
@@ -133,14 +154,13 @@ function update(source,depth_factor) {
       			if(d.children){
       				d3.select(this).style("fill","green");
       				d3.selectAll("path.link").style("stroke-width","1.5px"); // this should be stroke 
-      				
       				var child = d3.selectAll("path.node");
       				child.filter(function(x){return d.id != x.id}).style("fill","steelblue"); //Works absolutely fine
       			}
       		})
   			.attr("d", d3.svg.symbol()
-  				.size(function(d){ return d.id === i-1 ? "600":"150";})
-  				.type(function(d){ return d.id === i-1 ? "square":"circle";}));
+  				.size(function(d){ return d.parent == "null" ? "600":"150";})
+  				.type(function(d){ return d.parent == "null" ? "square":"circle";}));
   			
 
 
@@ -148,6 +168,8 @@ function update(source,depth_factor) {
 	  .attr("x", function(d) { 
 		  return d.children || d._children ? -13 : 13; })
 	  .attr("dy", ".35em")
+	  .attr("transform", function(d) {
+		  		return "translate(" + 0 + "," + (25*index) + ")"; })//svg x,y co-ordinates //need to see how this can be dynamic
 	  .attr("text-anchor", function(d) { 
 		  return d.children || d._children ? "end" : "start"; })
 	  .text(function(d) { return d.name; })
@@ -155,25 +177,29 @@ function update(source,depth_factor) {
 
   // Declare the links…
   var link = svg.selectAll("path.link")
-	  .data(links, function(d) { return d.target.id; });
+	  .data(links, function(d,i) {
+	  	console.log(d.source.id + "_"+ d.target.id +"_"+side);
+	  	return d.source.id + "_"+ d.target.id +"_"+side;
+	  	 });
 
+
+
+console.log(links);
   // Enter the links.
   link.enter().insert("path", "g")
 	  .attr("class", "link")
-	  .attr("transform","translate("+width/2+",0)")
+	  .attr("transform", function(d) { 
+		  		return "translate(" + (width/2) + "," + (25*index) + ")"; })//svg x,y co-ordinates //need to see how this can be dynamic
 	  .attr("d", diagonal);
+
+  })
 
 }
 
 
-//Pending shape of the col can it be improved ????
-
-
-//mouseover funstionality this is easy.
-
-
-
-
+//With one table it gets srewed. 
+//The links naming is little tricky.
+//Biggest problem is how to solve common links????
 
 
 </script>

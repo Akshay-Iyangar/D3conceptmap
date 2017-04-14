@@ -97,12 +97,16 @@
             "parent":"null",
             "children":[  
                {  
-                  "name":"Table10",
+                  "name":"Table24",
                   "parent":"ColumnB",
                   "children":[  
                      {  
                         "name":"Table16",
-                        "parent":"Table10"
+                        "parent":"Table24"
+                     },
+                     {  
+                        "name":"Table17",
+                        "parent":"Table24"
                      }
                   ]
                }
