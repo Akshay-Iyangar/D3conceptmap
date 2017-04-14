@@ -95,16 +95,49 @@ function update(source,depth_factor) {
 
   // Enter the nodes.
   var nodeEnter = node.enter().append("g")
-	  .attr("class", "node")
+	  .attr("class", "nodes")
 	  .attr("transform", function(d) { 
 		  return "translate(" + (d.y+(width/2)) + "," + d.x + ")"; }); //svg x,y co-ordinates
 
 //for varying shapes use path and keep retrofitting as per conveniance
+//This d.id === i-1 may come to bite you as the code exapnds. I guess
 
   nodeEnter.append("path")
+  			.attr("class","node")
   			.style("fill", function(d){ return d.id === i-1 ? "green":"steelblue";})
       		.style("stroke", "white")
       		.style("stroke-width", "1.5px")
+      		.on("mouseover", function(d) {
+      			if(d.children){
+      				d3.select(this).style("fill","red");
+      				
+      				d3.selectAll("path.link").style("stroke-width","5.5px"); // this should be stroke 
+      				
+      				var child = d3.selectAll("path.node");
+      				child.filter(function(x){return d.id != x.id}).style("fill","pink"); //Works absolutely fine
+
+      				//This is good logic may be needed but need recursive action not iterative . 
+      				/*d.children.forEach(function(c,i){
+      					console.log(c.children);
+      					childNodes[i] = c;
+      					d3.selectAll("path.link").style("fill","black");
+      					//console.log(c);
+      					//console.log(i);
+      					//d3.select(this).style("fill","black");
+      				})*/
+      				
+      			}
+      		})
+      		
+      		.on("mouseout", function(d){
+      			if(d.children){
+      				d3.select(this).style("fill","green");
+      				d3.selectAll("path.link").style("stroke-width","1.5px"); // this should be stroke 
+      				
+      				var child = d3.selectAll("path.node");
+      				child.filter(function(x){return d.id != x.id}).style("fill","steelblue"); //Works absolutely fine
+      			}
+      		})
   			.attr("d", d3.svg.symbol()
   				.size(function(d){ return d.id === i-1 ? "600":"150";})
   				.type(function(d){ return d.id === i-1 ? "square":"circle";}));
@@ -134,7 +167,12 @@ function update(source,depth_factor) {
 
 
 //Pending shape of the col can it be improved ????
+
+
 //mouseover funstionality this is easy.
+
+
+
 
 
 
